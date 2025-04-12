@@ -1,5 +1,3 @@
 *
 !.gitignore
 !.git
-!*/docker-compose.yml
-!ts-confg/*
