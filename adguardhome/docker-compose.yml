@@ -1,0 +1,31 @@
+services:
+  adguardhome-ts:
+    image: tailscale/tailscale:latest
+    container_name: adguardhome-ts
+    hostname: aegis
+    cap_add:
+      - net_admin
+    volumes:
+      - ./state:/var/lib/tailscale
+      - ./ts-config:/config
+    devices:
+      - dev/net/tun:/dev/net/tun
+    environment:
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_SERVE_CONFIG=/config/serve-config.json
+      - TS_USERSPACE=false
+    dns:
+      - 100.100.100.100
+      - 1.1.1.1
+    restart: unless-stopped
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: adguardhome
+    restart: unless-stopped
+    volumes:
+      - ./work:/opt/adguardhome/work
+      - ./conf:/opt/adguardhome/conf
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    network_mode: "service:adguardhome-ts"

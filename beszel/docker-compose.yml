@@ -1,0 +1,44 @@
+services:
+  beszel-ts:
+    image: tailscale/tailscale:latest
+    container_name: beszel-ts
+    hostname: argus
+    cap_add:
+      - net_admin
+    volumes:
+      - ./state:/var/lib/tailscale
+      - ./ts-config:/config
+      - /etc/localtime:/etc/localtime:ro
+    devices:
+      - dev/net/tun:/dev/net/tun
+    environment:
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_SERVE_CONFIG=/config/serve-config.json
+      - TS_USERSPACE=false
+    dns:
+      - 100.100.100.100
+      - 1.1.1.1
+    restart: unless-stopped
+  beszel:
+    image: henrygd/beszel:latest
+    container_name: beszel
+    restart: unless-stopped
+    network_mode: "service:beszel-ts"
+    volumes:
+      - ./beszel_data:/beszel_data
+      - /etc/localtime:/etc/localtime:ro
+  beszel-agent:
+    image: henrygd/beszel-agent:latest
+    container_name: beszel-agent
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro  
+      - /etc/localtime:/etc/localtime:ro
+      - /mnt/data/.beszel:/extra-filesystems/sda1:ro
+    environment:
+      LISTEN: 45876
+      # Do not remove quotes around the key
+      KEY: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK0f6IM8UZ7ZlZGDJFGUE+r1C/16rVgq12lxfhtmONXt'
+      FILESYSTEM: nvme0n1
