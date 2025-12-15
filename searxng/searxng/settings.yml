@@ -1960,7 +1960,7 @@ engines:
     shortcut: sp
     startpage_categ: web
     categories: [general, web]
-    disabled: true
+    disabled: false
     additional_tests:
       rosebud: *test_rosebud
 
