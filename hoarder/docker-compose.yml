@@ -1,0 +1,73 @@
+services:
+  hoarder-ts:
+    image: tailscale/tailscale:latest
+    container_name: hoarder-ts
+    hostname: tagnest 
+    cap_add:
+      - net_admin
+    volumes:
+      - ./state:/var/lib/tailscale
+      - ./ts-config:/config
+    devices:
+      - dev/net/tun:/dev/net/tun
+    env_file:
+      - .env
+    environment:
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_SERVE_CONFIG=/config/serve-config.json
+      - TS_USERSPACE=false
+    #dns:
+    #  - 100.100.100.100
+    #  - 1.1.1.1
+    restart: unless-stopped
+  hoarder:
+    container_name: hoarder
+    image: ghcr.io/karakeep-app/karakeep:${KARAKEEP_VERSION:-release}
+    restart: unless-stopped
+    volumes:
+      # By default, the data is stored in a docker volume called "data".
+      # If you want to mount a custom directory, change the volume mapping to:
+      # - /path/to/your/directory:/data
+      - /mnt/data/hoarder:/data
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - .env
+    environment:
+      MEILI_ADDR: http://localhost:7700
+      BROWSER_WEB_URL: http://localhost:9222
+      # OPENAI_API_KEY: ...
+
+      # You almost never want to change the value of the DATA_DIR variable.
+      # If you want to mount a custom directory, change the volume mapping above instead.
+      DATA_DIR: /data # DON'T CHANGE THIS
+    network_mode: "service:hoarder-ts"
+  chrome:
+    container_name: hoarder_chrome
+    image: gcr.io/zenika-hub/alpine-chrome:123
+    restart: unless-stopped
+    network_mode: "service:hoarder-ts"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    command:
+      - --no-sandbox
+      - --disable-gpu
+      - --disable-dev-shm-usage
+      - --remote-debugging-address=0.0.0.0
+      - --remote-debugging-port=9222
+      - --hide-scrollbars
+  meilisearch:
+    container_name: hoarder_meilisearch
+    image: getmeili/meilisearch:v1.13.3
+    restart: unless-stopped
+    env_file:
+      - .env
+    network_mode: "service:hoarder-ts"
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meilisearch:/meili_data
+      - /etc/localtime:/etc/localtime:ro
+
+volumes:
+  meilisearch:
