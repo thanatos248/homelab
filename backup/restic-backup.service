@@ -1,0 +1,11 @@
+[Unit]
+Description=Homelab restic backup to Google Drive
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/home/homelab/Docker/backup/backup.sh
+Nice=10
+IOSchedulingClass=idle

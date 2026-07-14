@@ -1,8 +1,15 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   beszel-ts:
-    image: tailscale/tailscale:latest
+    image: tailscale/tailscale:v1.98.8
     container_name: beszel-ts
     hostname: argus
+    logging: *default-logging
     cap_add:
       - net_admin
     volumes:
@@ -10,7 +17,9 @@ services:
       - ./ts-config:/config
       - /etc/localtime:/etc/localtime:ro
     devices:
-      - dev/net/tun:/dev/net/tun
+      - /dev/net/tun:/dev/net/tun
+    env_file:
+      - ../.env.tailscale
     environment:
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
       - TS_STATE_DIR=/var/lib/tailscale
@@ -21,17 +30,19 @@ services:
       - 1.1.1.1
     restart: unless-stopped
   beszel:
-    image: henrygd/beszel:latest
+    image: henrygd/beszel:0.18.7
     container_name: beszel
     restart: unless-stopped
+    logging: *default-logging
     network_mode: "service:beszel-ts"
     volumes:
-      - ./beszel_data:/beszel_data
+      - /srv/beszel:/beszel_data
       - /etc/localtime:/etc/localtime:ro
   beszel-agent:
-    image: henrygd/beszel-agent:latest
+    image: henrygd/beszel-agent:0.18.7
     container_name: beszel-agent
     restart: unless-stopped
+    logging: *default-logging
     network_mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro  

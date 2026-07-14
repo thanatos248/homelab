@@ -1,15 +1,24 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   searxng-ts:
-    image: tailscale/tailscale:latest
+    image: tailscale/tailscale:v1.98.8
     container_name: searxng-ts
     hostname: savitri
+    logging: *default-logging
     cap_add:
       - net_admin
     volumes:
       - ./state:/var/lib/tailscale
       - ./ts-config:/config
     devices:
-      - dev/net/tun:/dev/net/tun
+      - /dev/net/tun:/dev/net/tun
+    env_file:
+      - ../.env.tailscale
     environment:
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
       - TS_STATE_DIR=/var/lib/tailscale
@@ -33,15 +42,11 @@ services:
       - SETGID
       - SETUID
       - DAC_OVERRIDE
-    logging:
-      driver: json-file
-      options:
-        max-size: 1m
-        max-file: 1
+    logging: *default-logging
 
   searxng:
     container_name: searxng
-    image: docker.io/searxng/searxng:latest
+    image: docker.io/searxng/searxng:2026.7.7-f69b22c45
     restart: unless-stopped
     volumes:
       - ./searxng:/etc/searxng:rw
@@ -57,11 +62,7 @@ services:
       - SETGID
       - SETUID
     network_mode: "service:searxng-ts"
-    logging:
-      driver: json-file
-      options:
-        max-size: 1m
-        max-file: 1
+    logging: *default-logging
 
 volumes:
   valkey-data2:
