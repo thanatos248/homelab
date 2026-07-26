@@ -1,0 +1,20 @@
+# Shared Tailscale sidecar. Consumed via `extends:` from each stack's docker-compose.yml.
+# Bump the image tag here once instead of in every stack.
+services:
+  tailscale-base:
+    image: tailscale/tailscale:v1.98.8
+    cap_add:
+      - net_admin
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve-config.json
+      TS_USERSPACE: "false"
+    # Uncomment to force MagicDNS + Cloudflare resolvers on the sidecar
+    # (was previously set individually on every stack):
+    dns:
+      - 100.100.100.100
+      - 1.1.1.1
+    restart: unless-stopped

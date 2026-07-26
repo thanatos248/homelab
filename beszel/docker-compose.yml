@@ -6,29 +6,17 @@ x-logging: &default-logging
 
 services:
   beszel-ts:
-    image: tailscale/tailscale:v1.98.8
-    container_name: beszel-ts
+    extends:
+      file: ../common/tailscale.yml
+      service: tailscale-base
     hostname: argus
-    logging: *default-logging
-    cap_add:
-      - net_admin
+    container_name: beszel-ts
+    env_file:
+      - ../.env.tailscale
     volumes:
       - ./state:/var/lib/tailscale
       - ./ts-config:/config
-      - /etc/localtime:/etc/localtime:ro
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    env_file:
-      - ../.env.tailscale
-    environment:
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_SERVE_CONFIG=/config/serve-config.json
-      - TS_USERSPACE=false
-    dns:
-      - 100.100.100.100
-      - 1.1.1.1
-    restart: unless-stopped
+    logging: *default-logging
   beszel:
     image: henrygd/beszel:0.18.7
     container_name: beszel

@@ -5,31 +5,20 @@ x-logging: &default-logging
     max-file: "3"
 
 services:
-  hoarder-ts:
-    image: tailscale/tailscale:v1.98.8
-    container_name: hoarder-ts
+  karakeep-ts:
+    extends:
+      file: ../common/tailscale.yml
+      service: tailscale-base
     hostname: tagnest
-    logging: *default-logging
-    cap_add:
-      - net_admin
+    container_name: karakeep-ts
+    env_file:
+      - ../.env.tailscale
     volumes:
       - ./state:/var/lib/tailscale
       - ./ts-config:/config
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    env_file:
-      - ../.env.tailscale
-    environment:
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_SERVE_CONFIG=/config/serve-config.json
-      - TS_USERSPACE=false
-    #dns:
-    #  - 100.100.100.100
-    #  - 1.1.1.1
-    restart: unless-stopped
-  hoarder:
-    container_name: hoarder
+    logging: *default-logging
+  karakeep:
+    container_name: karakeep
     image: ghcr.io/karakeep-app/karakeep:${KARAKEEP_VERSION:-release}
     restart: unless-stopped
     logging: *default-logging
@@ -49,13 +38,13 @@ services:
       # You almost never want to change the value of the DATA_DIR variable.
       # If you want to mount a custom directory, change the volume mapping above instead.
       DATA_DIR: /data # DON'T CHANGE THIS
-    network_mode: "service:hoarder-ts"
+    network_mode: "service:karakeep-ts"
   chrome:
-    container_name: hoarder_chrome
+    container_name: karakeep_chrome
     image: gcr.io/zenika-hub/alpine-chrome:123
     restart: unless-stopped
     logging: *default-logging
-    network_mode: "service:hoarder-ts"
+    network_mode: "service:karakeep-ts"
     volumes:
       - /etc/localtime:/etc/localtime:ro
     command:
@@ -66,13 +55,13 @@ services:
       - --remote-debugging-port=9222
       - --hide-scrollbars
   meilisearch:
-    container_name: hoarder_meilisearch
+    container_name: karakeep_meilisearch
     image: getmeili/meilisearch:v1.13.3
     restart: unless-stopped
     logging: *default-logging
     env_file:
       - .env
-    network_mode: "service:hoarder-ts"
+    network_mode: "service:karakeep-ts"
     environment:
       MEILI_NO_ANALYTICS: "true"
     volumes:
