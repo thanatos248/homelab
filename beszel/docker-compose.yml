@@ -18,7 +18,7 @@ services:
       - ./ts-config:/config
     logging: *default-logging
   beszel:
-    image: henrygd/beszel:0.18.7
+    image: henrygd/beszel:0.18.8
     container_name: beszel
     restart: unless-stopped
     logging: *default-logging
@@ -27,7 +27,7 @@ services:
       - /srv/beszel:/beszel_data
       - /etc/localtime:/etc/localtime:ro
   beszel-agent:
-    image: henrygd/beszel-agent:0.18.7
+    image: henrygd/beszel-agent:0.18.8
     container_name: beszel-agent
     restart: unless-stopped
     logging: *default-logging
