@@ -18,7 +18,7 @@ services:
       - ./ts-config:/config
     logging: *default-logging
   beszel:
-    image: henrygd/beszel:0.18.8
+    image: henrygd/beszel:0.20.0
     container_name: beszel
     restart: unless-stopped
     logging: *default-logging
